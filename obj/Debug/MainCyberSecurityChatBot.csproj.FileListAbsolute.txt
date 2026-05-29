@@ -1,0 +1,16 @@
+C:\Users\treas\source\repos\MainChatBot\MainChatBot\bin\Debug\audio\greeting.wav
+C:\Users\treas\source\repos\MainChatBot\MainChatBot\bin\Debug\MainChatBot.exe.config
+C:\Users\treas\source\repos\MainChatBot\MainChatBot\bin\Debug\MainChatBot.exe
+C:\Users\treas\source\repos\MainChatBot\MainChatBot\bin\Debug\MainChatBot.pdb
+C:\Users\treas\source\repos\MainChatBot\MainChatBot\obj\Debug\MainCyberSecurityChatBot.csproj.AssemblyReference.cache
+C:\Users\treas\source\repos\MainChatBot\MainChatBot\obj\Debug\MainWindow.baml
+C:\Users\treas\source\repos\MainChatBot\MainChatBot\obj\Debug\MainWindow.g.cs
+C:\Users\treas\source\repos\MainChatBot\MainChatBot\obj\Debug\App.g.cs
+C:\Users\treas\source\repos\MainChatBot\MainChatBot\obj\Debug\MainChatBot_Content.g.cs
+C:\Users\treas\source\repos\MainChatBot\MainChatBot\obj\Debug\MainChatBot_MarkupCompile.cache
+C:\Users\treas\source\repos\MainChatBot\MainChatBot\obj\Debug\MainChatBot.g.resources
+C:\Users\treas\source\repos\MainChatBot\MainChatBot\obj\Debug\MainChatBot.Properties.Resources.resources
+C:\Users\treas\source\repos\MainChatBot\MainChatBot\obj\Debug\MainCyberSecurityChatBot.csproj.GenerateResource.cache
+C:\Users\treas\source\repos\MainChatBot\MainChatBot\obj\Debug\MainCyberSecurityChatBot.csproj.CoreCompileInputs.cache
+C:\Users\treas\source\repos\MainChatBot\MainChatBot\obj\Debug\MainChatBot.exe
+C:\Users\treas\source\repos\MainChatBot\MainChatBot\obj\Debug\MainChatBot.pdb

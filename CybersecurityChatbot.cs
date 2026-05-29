@@ -1,19 +1,22 @@
 ﻿
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace MainCyberSecurityChatBot{
+    // Main chatbot logic class
     class CybersecurityChatbot {
-        private static Random random = new Random();
 
-       
+        // Random generator for random responses
+        private static Random random = new Random();
         private static string userName = "";
         private static string userInterest = "";
         private static string lastTopic = "";
 
-
+        //Dictionary storing cybersecurity tips
         private static Dictionary<string, List<string>> tips = new Dictionary<string, List<string>>(){
             {
+                // Phishing tips array 
                 "phishing", new List<string>() {
                     "Be cautious of emails asking for personal information.",
                     "Always verify the sender before clicking links.",
@@ -22,6 +25,7 @@ namespace MainCyberSecurityChatBot{
                 }
             },
             {
+                // Password safety tips array
                 "password", new List<string>() {
                     "Use at least 12 characters with symbols and numbers.",
                     "Never reuse passwords across accounts.",
@@ -30,6 +34,7 @@ namespace MainCyberSecurityChatBot{
                 }
             },
             {
+                // Safe browsing tips array
                 "browsing", new List<string>() {
                     "Only use HTTPS websites for sensitive data.",
                     "Avoid downloading unknown files.",
@@ -39,12 +44,12 @@ namespace MainCyberSecurityChatBot{
             }
         };
 
-      
+        // Method returns a random tip from a list
         private static string GetRandom(List<string> list) {
             return list[random.Next(list.Count)];
         }
 
-
+        // Method detects user emotion/sentiment
         private static string DetectSentiment(string input) {
             if (input.Contains("worried") || input.Contains("scared"))
                 return "worried";
@@ -58,7 +63,7 @@ namespace MainCyberSecurityChatBot{
             return "";
         }
 
-
+        // Main chatbot response method
         public static string GetResponse(string input) {
             if (string.IsNullOrWhiteSpace(input))
                 return "Please type something so I can help you.";
@@ -70,13 +75,16 @@ namespace MainCyberSecurityChatBot{
        
             if (input.Contains("my name is")) {
                 userName = input.Replace("my name is", "").Trim();
+
                 return $"Nice to meet you, {userName}! How can I help you with cybersecurity today?";
             }
 
 
             if (input.Contains("i'm interested in")) {
                 userInterest = input.Replace("i'm interested in", "").Trim();
-                return $"Great! I'll remember that you're interested in {userInterest}.";
+
+                return $"Great! I'll remember that you're interested in {userInterest}. " +
+                       $"It's an important part of cybersecurity.";
             }
 
           
@@ -103,29 +111,68 @@ namespace MainCyberSecurityChatBot{
                 return BuildResponse("Hacking involves exploiting system vulnerabilities.", sentiment);
             }
 
-       
-            if (input.Contains("give me a tip") || input.Contains("tip")) {
+            // Follow-up conversation flow
+            if (input.Contains("tell me more") || input.Contains("explain more")) {
+
+            // Continue phishing conversation
+            if (lastTopic == "phishing") {
+
+                    return "Phishing scams often use fake emails, websites, and urgent messages to trick users into revealing passwords or banking information.";
+            }
+
+            // Continue password conversation
+            if (lastTopic == "password") {
+
+                    return "Weak passwords are easy for hackers to guess. Strong passwords reduce the risk of cyberattacks.";
+            }
+
+            // Continue browsing conversation
+            if (lastTopic == "browsing") {
+
+                    return "Unsafe browsing can expose users to malware, fake websites, and online scams.";
+            }
+
+                return "Please ask about the following cybersecurity Topics e.g. Phishing, password and browsing";
+            }
+
+            if (input.Contains("give me a tip") || input.Contains("tip") || input.Contains("another tip")) {
                 if (tips.ContainsKey(lastTopic))
                     return GetRandom(tips[lastTopic]);
 
                 return "Tell me a topic first (like phishing or password safety) so I can give you a tip.";
             }
 
-        
+            // Personalised recall feature
+            if (input.Contains("advice") || input.Contains("recommend")) {
+
+                if (!string.IsNullOrEmpty(userInterest)) {
+
+                    return $"Since you're interested in {userInterest}, " +
+                           $"you should regularly review your account privacy and security settings, to allows be on the safe side";
+                }
+            }
+
+            // Help menu response
             if (input.Contains("help") || input.Contains("what can i ask")) {
                 return @"You can ask me about:
+
 - Phishing
 - Password safety
 - Safe browsing
 - Hacking
 
-Then ask 'give me a tip' for advice!";
+Then ask:
+- Give me a tip
+- Another tip
+- Tell me more
+- Explain more";
             }
 
-            return "I'm not sure I understand. Can you try rephrasing or ask about cybersecurity topics like phishing or passwords?";
+            // Default chatbot response
+            return "Please repeat the question again I don't think I understand, also try rephrasing or ask about cybersecurity topics like phishing or passwords?";
         }
 
-
+        // Builds chatbot responses with emotion + tips
         private static string BuildResponse(string baseResponse, string sentiment) {
             string emotionalLayer = "";
 
@@ -141,8 +188,9 @@ Then ask 'give me a tip' for advice!";
 
             string tip = "";
 
+            // Check if tips exist for current topic
             if (tips.ContainsKey(lastTopic)) {
-                tip = "\n\nTip: " + GetRandom(tips[lastTopic]);
+                tip = "\n\n NOTE THAT: " + GetRandom(tips[lastTopic]);
             }
 
             return emotionalLayer + baseResponse + tip;
