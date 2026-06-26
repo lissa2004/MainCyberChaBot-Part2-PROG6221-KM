@@ -10,6 +10,7 @@ namespace MainCyberSecurityChatBot
 
         private int score;
 
+        private bool questionAnswered = false;
         public QuizManager()
         {
             quizQuestions = new List<QuizQuestion>();
@@ -17,7 +18,7 @@ namespace MainCyberSecurityChatBot
             LoadQuizQuestions();
         }
 
-private void LoadQuizQuestions()
+        private void LoadQuizQuestions()
         {
             quizQuestions.Clear();
 
@@ -38,20 +39,6 @@ private void LoadQuizQuestions()
                 Explanation = "Reporting phishing emails helps stop cybercriminals."
             });
 
-            quizQuestions.Add(new QuizQuestion
-            {
-                Question = "True or False: You should reuse the same password on every website.",
-
-                Options = new List<string>
-        {
-            "True",
-            "False"
-        },
-
-                CorrectAnswer = "False",
-
-                Explanation = "Every account should have its own password."
-            });
 
             quizQuestions.Add(new QuizQuestion
             {
@@ -181,8 +168,14 @@ private void LoadQuizQuestions()
 
         public bool SubmitAnswer(string answer)
         {
-            bool correct = answer.ToUpper() ==
-            quizQuestions[currentQuestion].CorrectAnswer.ToUpper();
+            if (questionAnswered)
+                return false;
+
+            questionAnswered = true;
+
+            bool correct =
+                answer.Trim().ToUpper() ==
+                quizQuestions[currentQuestion].CorrectAnswer.Trim().ToUpper();
 
             if (correct)
             {
@@ -192,21 +185,34 @@ private void LoadQuizQuestions()
             return correct;
         }
 
+       
+
         public bool NextQuestion()
         {
             currentQuestion++;
+            questionAnswered = false;
 
             return currentQuestion < quizQuestions.Count;
+        }
+
+        public QuizQuestion GetCurrentQuestion()
+        {
+            if (currentQuestion >= quizQuestions.Count)
+                return null;
+
+            return quizQuestions[currentQuestion];
+        }
+
+        public void ResetQuiz()
+        {
+            currentQuestion = 0;
+            score = 0;
+            questionAnswered = false;
         }
 
         public string GetExplanation()
         {
             return quizQuestions[currentQuestion].Explanation;
-        }
-
-        public QuizQuestion GetCurrentQuestion()
-        {
-            return quizQuestions[currentQuestion];
         }
 
         public int CurrentQuestionNumber
@@ -223,6 +229,5 @@ private void LoadQuizQuestions()
         {
             get { return score; }
         }
-
     }
 }

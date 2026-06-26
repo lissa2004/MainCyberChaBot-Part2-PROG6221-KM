@@ -1,12 +1,14 @@
 ﻿using MainCyberSecurityChatBot;
 using MySql.Data.MySqlClient;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Media;
 using System.Security.Cryptography;
 using System.Security.Policy;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 
@@ -31,8 +33,8 @@ namespace MainCyberSecurityChatBot {
             Loaded += MainWindow_Loaded;
 
             TestConnection();
-
         }
+
         private void TestConnection() {
             using (MySqlConnection conn = new MySqlConnection(connectionString)) {
                 try {
@@ -63,12 +65,10 @@ namespace MainCyberSecurityChatBot {
                         reminderDate = ReminderDatePicker.SelectedDate.Value;
                     }
 
-                    if (ReminderCheckBox.IsChecked == true 
+                    if (ReminderCheckBox.IsChecked == true
                         && ReminderDatePicker.SelectedDate.HasValue) {
-                        AddBotMessage(
-                            $"Got it! I'll remind you on " +
-                            $"{ReminderDatePicker.SelectedDate.Value.ToShortDateString()}."
-                        );
+                        TypeText( $"Got it! I'll remind you on " + $"{ReminderDatePicker.SelectedDate.Value.ToShortDateString()}.");
+                        AddToLog($"Reminder set for '{TaskTitleBox.Text}' on {ReminderDatePicker.SelectedDate.Value.ToShortDateString()}");
                     }
 
                     cmd.Parameters.AddWithValue("@title", TaskTitleBox.Text);
@@ -78,13 +78,14 @@ namespace MainCyberSecurityChatBot {
 
                     cmd.ExecuteNonQuery();
 
-                    AddBotMessage(
-                    $"Task added with the description " +
-                    $"\"{TaskDescriptionBox.Text}\"."
-                    );
+                    TypeText( $"Task added with the description " + $"\"{TaskDescriptionBox.Text}\".");
+                    AddToLog($"Task added: '{TaskTitleBox.Text}' - '{TaskDescriptionBox.Text}'");
+
 
                     TaskTitleBox.Clear();
+
                     TaskDescriptionBox.Clear();
+
                     ReminderDatePicker.SelectedDate = null;
                 }
                 catch (Exception ex) {
@@ -95,19 +96,18 @@ namespace MainCyberSecurityChatBot {
 
         private QuizManager quizManager = new QuizManager();
 
-        
 
-        private void StartQuizButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void StartQuizButton_Click(object sender, RoutedEventArgs e) {
             quizManager.StartQuiz();
 
             StartQuizButton.Visibility = Visibility.Collapsed;
 
             LoadCurrentQuestion();
+
+            AddToLog("Quiz started");
         }
 
-        private void AnswerButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void AnswerButton_Click(object sender, RoutedEventArgs e) {
             Button clickedButton = (Button)sender;
 
             // Get the first character (A, B, C or D)
@@ -115,13 +115,11 @@ namespace MainCyberSecurityChatBot {
 
             bool correct = quizManager.SubmitAnswer(selectedAnswer);
 
-            if (correct)
-            {
+            if (correct) {
                 FeedbackLabel.Text = "✅ Correct!\n\n" +
                                      quizManager.GetExplanation();
             }
-            else
-            {
+            else {
                 FeedbackLabel.Text = "❌ Incorrect!\n\n" +
                                      quizManager.GetExplanation();
             }
@@ -138,10 +136,8 @@ namespace MainCyberSecurityChatBot {
             AnswerDButton.IsEnabled = false;
         }
 
-        private void NextQuestionButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (quizManager.NextQuestion())
-            {
+        private void NextQuestionButton_Click(object sender, RoutedEventArgs e) {
+            if (quizManager.NextQuestion()) {
                 LoadCurrentQuestion();
 
                 AnswerAButton.IsEnabled = true;
@@ -149,14 +145,12 @@ namespace MainCyberSecurityChatBot {
                 AnswerCButton.IsEnabled = true;
                 AnswerDButton.IsEnabled = true;
             }
-            else
-            {
+            else {
                 FinishQuiz();
             }
         }
 
-        private void CloseQuizButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void CloseQuizButton_Click(object sender, RoutedEventArgs e) {
             QuizPanel.Visibility = Visibility.Collapsed;
 
             TaskAssistantPanel.Visibility = Visibility.Visible;
@@ -164,8 +158,7 @@ namespace MainCyberSecurityChatBot {
             StartQuizButton.Visibility = Visibility.Visible;
         }
 
-        private void LoadCurrentQuestion()
-        {
+        private void LoadCurrentQuestion() {
             QuizQuestion question = quizManager.GetCurrentQuestion();
 
             QuestionNumberLabel.Text =
@@ -177,16 +170,14 @@ namespace MainCyberSecurityChatBot {
 
             AnswerBButton.Content = question.Options[1];
 
-            if (question.Options.Count > 2)
-            {
+            if (question.Options.Count > 2) {
                 AnswerCButton.Content = question.Options[2];
                 AnswerCButton.Visibility = Visibility.Visible;
 
                 AnswerDButton.Content = question.Options[3];
                 AnswerDButton.Visibility = Visibility.Visible;
             }
-            else
-            {
+            else {
                 AnswerCButton.Visibility = Visibility.Collapsed;
                 AnswerDButton.Visibility = Visibility.Collapsed;
             }
@@ -236,6 +227,8 @@ namespace MainCyberSecurityChatBot {
             TaskAssistantPanel.Visibility = Visibility.Visible;
 
             StartQuizButton.Visibility = Visibility.Visible;
+
+            AddToLog($"Quiz completed - Score: {quizManager.Score}/{quizManager.TotalQuestions}");
         }
         private void ViewTasksButton_Click(object sender, RoutedEventArgs e) {
             using (MySqlConnection conn = new MySqlConnection(connectionString)) {
@@ -280,9 +273,10 @@ namespace MainCyberSecurityChatBot {
                 cmd.ExecuteNonQuery();
 
                 MessageBox.Show("Task completed!");
+                AddToLog($"Task marked as completed: ID {id}");
             }
         }
-        private void DeleteTaskButton_Click(object sender, RoutedEventArgs e ) {
+        private void DeleteTaskButton_Click(object sender, RoutedEventArgs e) {
             int id = GetSelectedTaskId();
 
             if (id == -1) {
@@ -301,6 +295,7 @@ namespace MainCyberSecurityChatBot {
                 cmd.ExecuteNonQuery();
 
                 MessageBox.Show("Task deleted!");
+                AddToLog($"Task deleted: ID {id}");
             }
         }
 
@@ -368,124 +363,261 @@ namespace MainCyberSecurityChatBot {
         private bool waitingForName = true;
         private string userName = "";
 
+        private string DetectIntent(string input)
+        {
+            input = input.ToLower();
+
+            // Quiz detection
+            if (input.Contains("quiz") || input.Contains("play quiz") || input.Contains("start quiz"))
+                return "quiz";
+
+            // Task detection - MORE ROBUST
+            if (input.Contains("add task") ||
+                input.Contains("new task") ||
+                input.Contains("create task") ||
+                input.Contains("remind me") ||
+                input.Contains("set a reminder") ||
+                input.Contains("add a reminder") ||
+                input.Contains("task") ||
+                input.Contains("reminder") ||
+                input.Contains("remember"))
+                return "task";
+
+            // Activity log detection - NEW
+            if (input.Contains("activity log") ||
+                input.Contains("what have you done") ||
+                input.Contains("show log") ||
+                input.Contains("recent actions"))
+                return "log";
+
+            // Info detection
+            if (input.Contains("password") ||
+                input.Contains("phishing") ||
+                input.Contains("hacking") ||
+                input.Contains("2fa") ||
+                input.Contains("security") ||
+                input.Contains("safe"))
+                return "info";
+
+            // Exit detection
+            if (input.Contains("bye") ||
+                input.Contains("goodbye") ||
+                input.Contains("exit") ||
+                input.Contains("quit"))
+                return "exit";
+
+            return "info";
+        }
+
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
             string input = UserInput.Text.Trim();
 
-            // check empty first
             if (string.IsNullOrWhiteSpace(input))
             {
                 AddBotMessage("Please type something.");
                 return;
             }
 
-            string lowerInput = input.ToLower();
-
             AddUserMessage(input);
 
-            // NAME FLOW FIRST
+            // First ask for user's name
             if (waitingForName)
             {
                 userName = input;
                 waitingForName = false;
-
-                TypeText(
-                    $"Nice to meet you, {userName}!\n\n" +
-                    "Ask me anything about online safety!\n\n" +
-                    "- Password safety\n" +
-                    "- Phishing\n" +
-                    "- Safe browsing\n" +
-                    "- Hacking"
-                );
-
+                TypeText($"Nice to meet you, {userName}! Ask me anything about cybersecurity.");
                 UserInput.Clear();
                 return;
             }
 
-            // EXIT COMMAND
-            if (lowerInput == "goodbye")
+            string intent = DetectIntent(input);
+
+            switch (intent)
             {
-                TypeText("Stay safe online, GOODBYE!");
-                Close();
-                return;
+                case "quiz":
+                    AddBotMessage("Starting the Cybersecurity Quiz...");
+
+                    // Hide ALL panels first
+
+                    QuizPanel.Visibility = Visibility.Visible;
+
+                    TaskAssistantPanel.Visibility = Visibility.Collapsed;
+
+                    quizManager.StartQuiz();
+
+                    LoadCurrentQuestion();
+
+                    AddToLog($"NLP: User started quiz with command: '{input}'");
+
+                    break;
+
+                case "task":
+                    // Extract task description from the input
+                    string taskDescription = ExtractTaskDescription(input);
+
+                    if (!string.IsNullOrWhiteSpace(taskDescription) && taskDescription != input)
+                    {
+                        // Pre-fill the task description
+                        TaskDescriptionBox.Text = taskDescription;
+
+                        TypeText($"I'll help you add a task: \"{taskDescription}\". Please fill in the details below.");
+
+                        AddToLog($"NLP: Task extracted from: '{input}' -> '{taskDescription}'");
+                    }
+                    else {
+                        TypeText("Opening Task Assistant...");
+                        AddToLog($"NLP: Task assistant opened");
+                    }
+
+                    TaskAssistantPanel.Visibility = Visibility.Visible;
+
+                    QuizPanel.Visibility = Visibility.Collapsed;
+                    break;
+
+                case "log":
+
+
+                    QuizPanel.Visibility = Visibility.Collapsed;
+                    TaskAssistantPanel.Visibility = Visibility.Collapsed;
+
+                    // Show activity log
+                    AddToLog($"NLP: User viewed activity log");
+                    ShowActivityLog();
+                    break;
+
+                case "exit":
+
+                    QuizPanel.Visibility = Visibility.Collapsed;
+                    TaskAssistantPanel.Visibility = Visibility.Collapsed;
+
+                    TypeText("Stay safe online. Goodbye!");
+                    Close();
+                    return;
+
+                case "info":
+
+                    QuizPanel.Visibility = Visibility.Collapsed;
+                    TaskAssistantPanel.Visibility = Visibility.Collapsed;
+
+                    string response = CybersecurityChatbot.GetResponse(input);
+                    TypeText(response);
+                    AddToLog($"NLP: User asked about: '{input}'");
+                    break;
+
+                default:
+                    QuizPanel.Visibility = Visibility.Collapsed;
+                    TaskAssistantPanel.Visibility = Visibility.Collapsed;
+
+                    TypeText("I didn't quite understand that. Try asking about passwords, phishing, tasks or quizzes.");
+                    break;
             }
 
-            // QUIZ COMMAND
-            if (lowerInput == "start quiz" ||
-                lowerInput == "quiz" ||
-                lowerInput == "play quiz")
-            {
-                AddBotMessage("Starting the Cybersecurity Quiz...");
 
-                TaskAssistantPanel.Visibility = Visibility.Collapsed;
-                QuizPanel.Visibility = Visibility.Visible;
-
-                quizManager.StartQuiz();
-                StartQuizButton.Visibility = Visibility.Collapsed;
-
-                LoadCurrentQuestion();
-
-                UserInput.Clear();
-                return;
-            }
-
-            // TASK ASSISTANT
-            if (lowerInput.Contains("add task") || lowerInput.Contains("reminder"))
-            {
-                AddBotMessage("Opening Task Assistant...");
-                TaskAssistantPanel.Visibility = Visibility.Visible;
-
-                UserInput.Clear();
-                return;
-            }
-
-            // NORMAL CHATBOT RESPONSE
-            string response = CybersecurityChatbot.GetResponse(input);
-            TypeText(response);
 
             UserInput.Clear();
         }
 
-        // Detect Enter key press/trigger event
-        private void UserInput_KeyDown(object sender,System.Windows.Input.KeyEventArgs e) {
-            if (e.Key == System.Windows.Input.Key.Enter) {
+        private List<string> activityLog = new List<string>();
 
+        private void AddToLog(string action)
+        {
+            activityLog.Add($"{DateTime.Now}: {action}");
+            // Keep only last 20 entries
+            if (activityLog.Count > 20)
+                activityLog.RemoveAt(0);
+        }
+
+        private void ShowActivityLog()
+        {
+            if (activityLog.Count == 0)
+            {
+                TypeText("No recent activity to show.");
+                return;
+            }
+
+            string log = "📋 Here's a summary of recent actions:\n\n";
+            int count = 1;
+            int start = Math.Max(0, activityLog.Count - 10); // Show last 10
+
+            for (int i = start; i < activityLog.Count; i++)
+            {
+                log += $"{count}. {activityLog[i]}\n";
+                count++;
+            }
+
+            TypeText(log);
+        }
+
+        private void UserInput_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
                 SendButton_Click(sender, e);
             }
         }
 
-        // Method for displaying user chat bubble
-        private void AddUserMessage(string message) {
-            Border bubble = new Border {
+        private void AddUserMessage(string message)
+        {
+            Border bubble = new Border
+            {
                 Background = Brushes.LightPink,
                 CornerRadius = new CornerRadius(8),
                 Padding = new Thickness(8),
                 Margin = new Thickness(8),
                 HorizontalAlignment = HorizontalAlignment.Right,
-                Child = new TextBlock {
+
+                Child = new TextBlock
+                {
                     Text = message,
                     FontSize = 16
                 }
             };
 
-            // Add bubble to chat panel
             ChatPanel.Children.Add(bubble);
 
-            // Scroll to newest message
             ChatScrollViewer.ScrollToEnd();
         }
 
+        private string ExtractTaskDescription(string input)
+        {
+            // Remove common prefixes
+            string[] prefixes = { "add task", "new task", "create task", "remind me", "set a reminder", "add a reminder" };
 
-        // Method for bot messages chat bubble
-        private void AddBotMessage(string message) {
+            input = input.ToLower();
 
-            Border bubble = new Border {
-                Background = Brushes.Purple,
+            foreach (string prefix in prefixes)
+            {
+                if (input.Contains(prefix))
+                {
+                    int index = input.IndexOf(prefix) + prefix.Length;
+                    if (index < input.Length)
+                    {
+                        string description = input.Substring(index).Trim();
+                        // Remove leading "to" or "for"
+                        if (description.StartsWith("to "))
+                            description = description.Substring(3);
+                        if (description.StartsWith("for "))
+                            description = description.Substring(4);
+                        return description;
+                    }
+                }
+            }
+            return input;
+        }
+
+        private void AddBotMessage(string message)
+        {
+            Border bubble = new Border
+            {
+                Background = Brushes.LightBlue,
                 CornerRadius = new CornerRadius(8),
                 Padding = new Thickness(8),
                 Margin = new Thickness(8),
                 HorizontalAlignment = HorizontalAlignment.Left,
-                Child = new TextBlock {
+
+                Child = new TextBlock
+                {
                     Text = message,
                     FontSize = 16,
                     Width = 300,
@@ -493,12 +625,10 @@ namespace MainCyberSecurityChatBot {
                 }
             };
 
-            // Add chatbot bubble
             ChatPanel.Children.Add(bubble);
 
-            // Auto scroll
             ChatScrollViewer.ScrollToEnd();
-
         }
+        
     }
 }

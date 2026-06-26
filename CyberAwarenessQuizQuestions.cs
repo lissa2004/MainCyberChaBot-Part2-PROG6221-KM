@@ -13,6 +13,10 @@ namespace MainCyberSecurityChatBot
         public string Explanation { get; set; }
 
 
+        // Default constructor (parameterless)
+        public QuizQuestion() { }
+
+
         public QuizQuestion(string question, List<string> options, string correctAnswer, string explanation)
         {
             Question = question;
