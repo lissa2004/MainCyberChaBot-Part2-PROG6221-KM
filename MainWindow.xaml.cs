@@ -16,6 +16,8 @@ namespace MainCyberSecurityChatBot {
 
     //Main chatbot window class
     public partial class MainWindow : Window {
+
+        // PART 3 (POE) SQL SERVER CONNECTOR TO THE SYSTEM AND DATABASE 
         string connectionString =
          "server=localhost;database=maincybersecuritychatbot;uid=root;pwd=kamogelomathikge@2004;";
 
@@ -24,6 +26,8 @@ namespace MainCyberSecurityChatBot {
 
             InitializeComponent();
 
+            
+            //For Part 3 POE  Visibility constructor 
             TaskAssistantPanel.Visibility = Visibility.Collapsed;
 
             SoundPlayer player = new SoundPlayer(@"audio\greeting.wav");
@@ -35,6 +39,125 @@ namespace MainCyberSecurityChatBot {
             TestConnection();
         }
 
+        //POE : Part 2 Methods. 
+        // Method that runs when application loads
+        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Try to play greeting audio
+            try
+            {
+                SoundPlayer player = new SoundPlayer(@"audio\greeting.wav");
+
+                // Play greeting sound
+                player.Play();
+            }
+            catch
+            {
+                MessageBox.Show("Greeting audio file not found.");
+            }
+            await System.Threading.Tasks.Task.Delay(300);
+
+            // Display introduction message
+            TypeText("Hello, Welcome to Cyber Security Awareness Bot, \n I'm here to help you stay safe online.\n Please enter your name in the chat below."
+            );
+        }
+
+        // Method for chatbot typing animation
+        private async void TypeText(string message)
+        {
+
+            // Create chatbot message bubble
+            Border bubble = new Border
+            {
+
+                Background = Brushes.Cyan,
+                CornerRadius = new CornerRadius(10),
+                Padding = new Thickness(10),
+                Margin = new Thickness(10),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                MaxWidth = 350
+            };
+
+            // Create text container
+            TextBlock textBlock = new TextBlock
+            {
+                FontSize = 16,
+                Foreground = Brushes.Black,
+                TextWrapping = TextWrapping.Wrap
+            };
+
+            bubble.Child = textBlock;
+            ChatPanel.Children.Add(bubble);
+            string currentText = "";
+            foreach (char c in message)
+            {
+                currentText += c;
+                textBlock.Text = currentText;
+                await System.Threading.Tasks.Task.Delay(40);
+                ChatScrollViewer.ScrollToEnd();
+            }
+        }
+
+        // Checks whether chatbot is waiting for user name
+        private bool waitingForName = true;
+        private string userName = "";
+
+        private void UserInput_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                SendButton_Click(sender, e);
+            }
+        }
+
+        //Design  user bubble
+        private void AddUserMessage(string message) {
+            Border bubble = new Border {
+                Background = Brushes.LightPink,
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(8),
+                Margin = new Thickness(8),
+                HorizontalAlignment = HorizontalAlignment.Right,
+
+                Child = new TextBlock {
+                    Text = message,
+                    FontSize = 16
+                }
+            };
+
+            ChatPanel.Children.Add(bubble);
+
+            ChatScrollViewer.ScrollToEnd();
+        }
+
+        //Add Bot message method
+        private void AddBotMessage(string message) {
+            Border bubble = new Border {
+                Background = Brushes.LightBlue,
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(8),
+                Margin = new Thickness(8),
+                HorizontalAlignment = HorizontalAlignment.Left,
+
+                Child = new TextBlock {
+                    Text = message,
+                    FontSize = 16,
+                    Width = 300,
+                    TextWrapping = TextWrapping.Wrap
+                }
+            };
+
+            ChatPanel.Children.Add(bubble);
+
+            ChatScrollViewer.ScrollToEnd();
+        }
+
+// End of Part 2 Methods 
+
+
+
+        //POE PART 3
+        //TASK 1: ADD task Assitance method and database connecter
         private void TestConnection() {
             using (MySqlConnection conn = new MySqlConnection(connectionString)) {
                 try {
@@ -47,6 +170,7 @@ namespace MainCyberSecurityChatBot {
             }
         }
 
+        //TASK 1 : Add task Button method 
         private void AddTaskButton_Click(object sender, RoutedEventArgs e) {
             using (MySqlConnection conn = new MySqlConnection(connectionString)) {
                 try {
@@ -93,10 +217,124 @@ namespace MainCyberSecurityChatBot {
                 }
             }
         }
+         
+        // Task 1 : TASK ASSISTANT buttons 
+        //View tasks button method 
+        private void ViewTasksButton_Click(object sender, RoutedEventArgs e)
+        {
+            using (MySqlConnection conn = new MySqlConnection(connectionString))
+            {
+                try
+                {
+                    conn.Open();
+
+                    string query = "SELECT * FROM tasks";
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+
+                    MySqlDataReader reader = cmd.ExecuteReader();
+
+                    TaskListBox.Items.Clear();
+
+                    while (reader.Read())
+                    {
+                        TaskListBox.Items.Add(
+                            $"{reader["id"]} | {reader["title"]} | {reader["status"]}"
+                        );
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+
+        //Complete task button method
+        private void CompleteTaskButton_Click(object sender, RoutedEventArgs e)
+        {
+            int id = GetSelectedTaskId();
+
+            if (id == -1)
+            {
+                MessageBox.Show("Select a task first!");
+                return;
+            }
+
+            using (MySqlConnection conn = new MySqlConnection(connectionString))
+            {
+                conn.Open();
+
+                string query = "UPDATE tasks SET status='Completed' WHERE id=@id";
+
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@id", id);
+
+                cmd.ExecuteNonQuery();
+
+                MessageBox.Show("Task completed!");
+                AddToLog($"Task marked as completed: ID {id}");
+            }
+        }
+
+        //Delete task button method 
+        private void DeleteTaskButton_Click(object sender, RoutedEventArgs e)
+        {
+            int id = GetSelectedTaskId();
+
+            if (id == -1)
+            {
+                MessageBox.Show("Select a task first!");
+                return;
+            }
+
+            using (MySqlConnection conn = new MySqlConnection(connectionString))
+            {
+                conn.Open();
+
+                string query = "DELETE FROM tasks WHERE id=@id";
+
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@id", id);
+
+                cmd.ExecuteNonQuery();
+
+                MessageBox.Show("Task deleted!");
+                AddToLog($"Task deleted: ID {id}");
+            }
+        }
+
+        //Close task button method 
+        private void CloseTaskButton_Click(object sender, RoutedEventArgs e)
+        {
+        
+            TaskAssistantPanel.Visibility = Visibility.Collapsed;
+
+            TypeText("✅ Task Assistant closed. Type 'add task' to open it again.");
+
+            // Log the action
+            AddToLog("Task Assistant panel closed");
+        }
+
+        private int GetSelectedTaskId()
+        {
+            if (TaskListBox.SelectedItem == null)
+                return -1;
+
+            string item = TaskListBox.SelectedItem.ToString();
+            return int.Parse(item.Split('|')[0].Trim());
+        }
+
+
+
+
+
+
+
+        //TASK 2: Quiz QUI Methods 
 
         private QuizManager quizManager = new QuizManager();
 
-
+        //start quiz button method
         private void StartQuizButton_Click(object sender, RoutedEventArgs e) {
             quizManager.StartQuiz();
 
@@ -107,6 +345,7 @@ namespace MainCyberSecurityChatBot {
             AddToLog("Quiz started");
         }
 
+        //Answer question quiz button method
         private void AnswerButton_Click(object sender, RoutedEventArgs e) {
             Button clickedButton = (Button)sender;
 
@@ -116,6 +355,7 @@ namespace MainCyberSecurityChatBot {
             bool correct = quizManager.SubmitAnswer(selectedAnswer);
 
             if (correct) {
+                
                 FeedbackLabel.Text = "✅ Correct!\n\n" +
                                      quizManager.GetExplanation();
             }
@@ -136,6 +376,7 @@ namespace MainCyberSecurityChatBot {
             AnswerDButton.IsEnabled = false;
         }
 
+        //Next question quiz button method 
         private void NextQuestionButton_Click(object sender, RoutedEventArgs e) {
             if (quizManager.NextQuestion()) {
                 LoadCurrentQuestion();
@@ -150,14 +391,16 @@ namespace MainCyberSecurityChatBot {
             }
         }
 
+        //Close quiz button method
         private void CloseQuizButton_Click(object sender, RoutedEventArgs e) {
             QuizPanel.Visibility = Visibility.Collapsed;
 
-            TaskAssistantPanel.Visibility = Visibility.Visible;
+            TaskAssistantPanel.Visibility = Visibility.Collapsed;
 
-            StartQuizButton.Visibility = Visibility.Visible;
+            //StartQuizButton.Visibility = Visibility.Visible;
         }
 
+        //Load Question method
         private void LoadCurrentQuestion() {
             QuizQuestion question = quizManager.GetCurrentQuestion();
 
@@ -199,20 +442,17 @@ namespace MainCyberSecurityChatBot {
             NextQuestionButton.Visibility = Visibility.Collapsed;
         }
 
-        private void FinishQuiz()
-        {
+        //Finish quiz method
+        private void FinishQuiz() {
             string message;
 
-            if (quizManager.Score >= 10)
-            {
+            if (quizManager.Score >= 10) {
                 message = "🏆 Great job! You're a cybersecurity pro!";
             }
-            else if (quizManager.Score >= 7)
-            {
+            else if (quizManager.Score >= 7) {
                 message = "👍 Good effort! Keep learning to stay safe online!";
             }
-            else
-            {
+            else {
                 message = "📚 Keep practicing your cybersecurity knowledge!";
             }
 
@@ -230,141 +470,14 @@ namespace MainCyberSecurityChatBot {
 
             AddToLog($"Quiz completed - Score: {quizManager.Score}/{quizManager.TotalQuestions}");
         }
-        private void ViewTasksButton_Click(object sender, RoutedEventArgs e) {
-            using (MySqlConnection conn = new MySqlConnection(connectionString)) {
-                try {
-                    conn.Open();
 
-                    string query = "SELECT * FROM tasks";
-                    MySqlCommand cmd = new MySqlCommand(query, conn);
 
-                    MySqlDataReader reader = cmd.ExecuteReader();
 
-                    TaskListBox.Items.Clear();
 
-                    while (reader.Read()) {
-                        TaskListBox.Items.Add(
-                            $"{reader["id"]} | {reader["title"]} | {reader["status"]}"
-                        );
-                    }
-                }
-                catch (Exception ex) {
-                    MessageBox.Show(ex.Message);
-                }
-            }
-        }
 
-        private void CompleteTaskButton_Click(object sender, RoutedEventArgs e) {
-            int id = GetSelectedTaskId();
-
-            if (id == -1) {
-                MessageBox.Show("Select a task first!");
-                return;
-            }
-
-            using (MySqlConnection conn = new MySqlConnection(connectionString)) {
-                conn.Open();
-
-                string query = "UPDATE tasks SET status='Completed' WHERE id=@id";
-
-                MySqlCommand cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", id);
-
-                cmd.ExecuteNonQuery();
-
-                MessageBox.Show("Task completed!");
-                AddToLog($"Task marked as completed: ID {id}");
-            }
-        }
-        private void DeleteTaskButton_Click(object sender, RoutedEventArgs e) {
-            int id = GetSelectedTaskId();
-
-            if (id == -1) {
-                MessageBox.Show("Select a task first!");
-                return;
-            }
-
-            using (MySqlConnection conn = new MySqlConnection(connectionString)) {
-                conn.Open();
-
-                string query = "DELETE FROM tasks WHERE id=@id";
-
-                MySqlCommand cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", id);
-
-                cmd.ExecuteNonQuery();
-
-                MessageBox.Show("Task deleted!");
-                AddToLog($"Task deleted: ID {id}");
-            }
-        }
-
-        private int GetSelectedTaskId()
-        {
-            if (TaskListBox.SelectedItem == null)
-                return -1;
-
-            string item = TaskListBox.SelectedItem.ToString();
-            return int.Parse(item.Split('|')[0].Trim());
-        }
-
-        // Method that runs when application loads
-        private async void MainWindow_Loaded(object sender, RoutedEventArgs e) {
-            // Try to play greeting audio
-            try {
-                SoundPlayer player = new SoundPlayer(@"audio\greeting.wav");
-
-                // Play greeting sound
-                player.Play();
-            }
-            catch {
-                MessageBox.Show("Greeting audio file not found.");
-            }
-            await System.Threading.Tasks.Task.Delay(300);
-
-            // Display introduction message
-            TypeText("Hello, Welcome to Cyber Security Awareness Bot, \n I'm here to help you stay safe online.\n Please enter your name in the chat below."
-            );
-        }
-
-        // Method for chatbot typing animation
-        private async void TypeText(string message) {
-
-            // Create chatbot message bubble
-            Border bubble = new Border {
-
-                Background = Brushes.Cyan,
-                CornerRadius = new CornerRadius(10),
-                Padding = new Thickness(10),
-                Margin = new Thickness(10),
-                HorizontalAlignment = HorizontalAlignment.Left,
-                MaxWidth = 350
-            };
-
-            // Create text container
-            TextBlock textBlock = new TextBlock {
-                FontSize = 16,
-                Foreground = Brushes.Black,
-                TextWrapping = TextWrapping.Wrap
-            };
-
-            bubble.Child = textBlock;
-            ChatPanel.Children.Add(bubble);
-            string currentText = "";
-            foreach (char c in message) {
-                currentText += c;
-                textBlock.Text = currentText;
-                await System.Threading.Tasks.Task.Delay(40);
-                ChatScrollViewer.ScrollToEnd();
-            }
-        }
-
-        // Checks whether chatbot is waiting for user name
-        private bool waitingForName = true;
-        private string userName = "";
-
-        private string DetectIntent(string input)
-        {
+        // Task 3 NPL : Simulation 
+       // Detection Intent Method 
+        private string DetectIntent(string input) {
             input = input.ToLower();
 
             // Quiz detection
@@ -408,6 +521,8 @@ namespace MainCyberSecurityChatBot {
 
             return "info";
         }
+
+        //Send button method for both PART 1 AND 2 POE 
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
@@ -477,7 +592,6 @@ namespace MainCyberSecurityChatBot {
 
                 case "log":
 
-
                     QuizPanel.Visibility = Visibility.Collapsed;
                     TaskAssistantPanel.Visibility = Visibility.Collapsed;
 
@@ -518,6 +632,12 @@ namespace MainCyberSecurityChatBot {
             UserInput.Clear();
         }
 
+
+
+
+
+        //TASK 4: ACTIVITY LOG METHODS 
+
         private List<string> activityLog = new List<string>();
 
         private void AddToLog(string action)
@@ -528,6 +648,7 @@ namespace MainCyberSecurityChatBot {
                 activityLog.RemoveAt(0);
         }
 
+        //Show activity method 
         private void ShowActivityLog()
         {
             if (activityLog.Count == 0)
@@ -549,36 +670,7 @@ namespace MainCyberSecurityChatBot {
             TypeText(log);
         }
 
-        private void UserInput_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter)
-            {
-                SendButton_Click(sender, e);
-            }
-        }
-
-        private void AddUserMessage(string message)
-        {
-            Border bubble = new Border
-            {
-                Background = Brushes.LightPink,
-                CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(8),
-                Margin = new Thickness(8),
-                HorizontalAlignment = HorizontalAlignment.Right,
-
-                Child = new TextBlock
-                {
-                    Text = message,
-                    FontSize = 16
-                }
-            };
-
-            ChatPanel.Children.Add(bubble);
-
-            ChatScrollViewer.ScrollToEnd();
-        }
-
+        // Extract Task Discription method
         private string ExtractTaskDescription(string input)
         {
             // Remove common prefixes
@@ -605,30 +697,5 @@ namespace MainCyberSecurityChatBot {
             }
             return input;
         }
-
-        private void AddBotMessage(string message)
-        {
-            Border bubble = new Border
-            {
-                Background = Brushes.LightBlue,
-                CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(8),
-                Margin = new Thickness(8),
-                HorizontalAlignment = HorizontalAlignment.Left,
-
-                Child = new TextBlock
-                {
-                    Text = message,
-                    FontSize = 16,
-                    Width = 300,
-                    TextWrapping = TextWrapping.Wrap
-                }
-            };
-
-            ChatPanel.Children.Add(bubble);
-
-            ChatScrollViewer.ScrollToEnd();
-        }
-        
     }
 }

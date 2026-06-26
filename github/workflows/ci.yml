@@ -1,0 +1,32 @@
+name: .NET Build
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v2
+
+    - name: Restore Packages
+      run: nuget restore MainCyberSecurityChatBot.slnx
+
+    - name: Build Solution
+      run: msbuild MainCyberSecurityChatBot.slnx /p:Configuration=Release

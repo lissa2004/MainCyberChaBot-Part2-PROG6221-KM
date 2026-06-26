@@ -54,82 +54,86 @@
             <StackPanel x:Name="ChatPanel"/>
         </ScrollViewer>
 
+        <!-- Part 3 (POE) TASK 2: QUIZ GUI -->
         <Border x:Name="QuizPanel"
-Grid.Column="1"
-Grid.Row="1"
-Margin="5"
-Width="320"
-Height="500"
-Background="#252526"
-CornerRadius="15"
-Padding="10"
-Visibility="Collapsed">
+            Grid.Column="1"
+            Grid.Row="1"
+            Margin="5"
+            Width="320"
+            Height="500"
+            Background="#252526"
+            CornerRadius="15"
+            Padding="10"
+            Visibility="Collapsed">
 
             <StackPanel>
+        <TextBlock Text="CYBERSECURITY QUIZ"
+            FontSize="22"
+            FontWeight="Bold"
+            Foreground="White"
+            HorizontalAlignment="Center"
+            Margin="0,0,0,20"/>
 
-                <TextBlock Text="CYBERSECURITY QUIZ"
-           FontSize="22"
-           FontWeight="Bold"
-           Foreground="White"
-           HorizontalAlignment="Center"
-           Margin="0,0,0,20"/>
+        <Button x:Name="StartQuizButton"
+            Content="Start Quiz"
+            Height="35"
+            Background="#89056c"
+            Foreground="White"
+            Click="StartQuizButton_Click"/>
 
-                <Button x:Name="StartQuizButton"
-        Content="Start Quiz"
-        Height="35"
-        Background="#89056c"
-        Foreground="White"
-        Click="StartQuizButton_Click"/>
+                <TextBlock x:Name="FeedbackLabel" 
+               Text="" 
+               FontSize="14" 
+               FontWeight="Bold"
+               TextWrapping="Wrap"
+               Margin="0,10"
+               HorizontalAlignment="Center"/>
 
                 <TextBlock x:Name="QuestionNumberLabel"
-           Margin="0,20,0,5"
-           Foreground="White"
-           FontWeight="Bold"/>
+            Margin="0,20,0,5"
+            Foreground="White"
+            FontWeight="Bold"/>
 
-                <TextBlock x:Name="QuestionLabel"
-           TextWrapping="Wrap"
-           Foreground="White"
-           FontSize="16"
-           Margin="0,5,0,15"/>
+        <TextBlock x:Name="QuestionLabel"
+            TextWrapping="Wrap"
+            Foreground="White"
+            FontSize="16"
+            Margin="0,5,0,15"/>
 
-                <Button x:Name="AnswerAButton"
-        Margin="0,3"
-        Click="AnswerButton_Click"/>
+        <Button x:Name="AnswerAButton"
+            Margin="0,3"
+            Click="AnswerButton_Click"/>
 
-                <Button x:Name="AnswerBButton"
-        Margin="0,3"
-        Click="AnswerButton_Click"/>
+        <Button x:Name="AnswerBButton"
+            Margin="0,3"
+            Click="AnswerButton_Click"/>
 
-                <Button x:Name="AnswerCButton"
-        Margin="0,3"
-        Click="AnswerButton_Click"/>
+        <Button x:Name="AnswerCButton"
+            Margin="0,3"
+            Click="AnswerButton_Click"/>
 
-                <Button x:Name="AnswerDButton"
-        Margin="0,3"
-        Click="AnswerButton_Click"/>
+        <Button x:Name="AnswerDButton"
+            Margin="0,3"
+            Click="AnswerButton_Click"/>
 
-                <TextBlock x:Name="FeedbackLabel"
-           Margin="0,15,0,10"
-           Foreground="Yellow"
-           TextWrapping="Wrap"/>
 
-                <TextBlock x:Name="ScoreLabel"
-           FontSize="16"
-           FontWeight="Bold"
-           Foreground="LightGreen"
-           Margin="0,10"/>
+        <TextBlock x:Name="ScoreLabel"
+            FontSize="16"
+            FontWeight="Bold"
+            Foreground="LightGreen"
+            Margin="0,10"/>
 
-                <Button x:Name="NextQuestionButton"
-        Content="Next Question"
-        Height="35"
-        Visibility="Collapsed"
-        Click="NextQuestionButton_Click"/>
+        <Button x:Name="NextQuestionButton"
+            Content="Next Question"
+            Height="35"
+            Visibility="Collapsed"
+            Click="NextQuestionButton_Click"/>
 
-                <Button x:Name="CloseQuizButton"
+        <Button x:Name="CloseQuizButton"
             Content="Close Quiz"
             Margin="0,10,0,0"
-            Background="White"
-            Foreground="Black"
+            Background="#89056c"
+            Foreground="White"
             Click="CloseQuizButton_Click"/>
 
             </StackPanel>
@@ -147,8 +151,12 @@ Visibility="Collapsed">
                Height="500">
 
             <ScrollViewer VerticalScrollBarVisibility="Auto">
+                
+                
+                
 
-
+                <!-- Part 3 (POE) TASK 1: TASK ASSISTANT -->
+                
                 <StackPanel>
 
                     <!-- TITLE -->
@@ -229,14 +237,18 @@ Visibility="Collapsed">
             Content="Close Task Assistant Panel"
             Height="35"
             Margin="0,5"
-            Background="White"
-            Foreground="Black"
-            Click="DeleteTaskButton_Click"/>
+            Background="#89056c"
+            Foreground="White"
+            Click="CloseTaskButton_Click"/>
                 </StackPanel>
 
             </ScrollViewer>
         </Border>
+        
+        
+        
 
+        <!-- POE PART 2: GUI  -->
         <!-- USER INPUT SECTION -->
         <Grid Grid.Row="2"
               Margin="10,10,10,10" 

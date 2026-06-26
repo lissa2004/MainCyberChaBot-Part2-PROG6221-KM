@@ -20,7 +20,7 @@ The chatbot interacts with users through a graphical chat interface and provides
 * Hacking awareness
 * Online privacy and security tips
 
-The application includes interactive chatbot conversations, random cybersecurity tips, typing animations, emotional awareness responses, and memory recall features to create a more engaging user experience.
+The application includes interactive chatbot conversations, random cybersecurity tips, typing animations, emotional awareness responses, and memory recall, quiz, Activity Log and Task Assistant(with and SQL intergration) features to create a more engaging user experience.
 
 
 # Features
@@ -59,15 +59,84 @@ The application includes interactive chatbot conversations, random cybersecurity
 * Implemented chatbot conversation flow
 * Improved chatbot user experience
 
+# Part 3: Advanced Features (Final Submission)
+
+## Natural Language Processing (NLP) Simulation
+
+* Keyword detection using `string.Contains()`
+* Intent detection
+* Flexible command recognition
+* Task extraction from user input
+* Reduced "I don't understand" responses
+
+## Supported intents:
+
+* Information
+* Quiz
+* Task
+* Reminder
+* Activity Log
+* Exit
+
+## Cybersecurity Mini-Game (Quiz)
+
+* 14 Multiple Choice and True/False questions
+* Immediate feedback after every answer
+* Score tracking
+* Final quiz results
+* Personalized feedback
+* One question displayed at a time
+
+## Topics Covered:
+
+* Phishing
+* Password Security
+* Safe Browsing
+* Malware
+* Social Engineering
+* Public Wi-Fi
+* Email Security
+* Two-Factor Authentication
+
+## Task Assistant with SQL Integration
+
+Users can:
+
+* Add tasks
+* View tasks
+* Complete tasks
+* Delete tasks
+* Set reminder dates
+* Track task status
+* Store tasks in a MySQL database
+
+## Activity Log
+
+The chatbot automatically records:
+
+* Quiz started
+* Quiz completed
+* Tasks added
+* Tasks completed
+* Tasks deleted
+* Reminder creation
+* NLP interactions
+* Activity Log viewed
+
+The latest actions are displayed with timestamps.
 
 # Technologies Used
 
 * C#
+* .NET Framework / .NET Core
 * WPF (Windows Presentation Foundation)
-* .NET Framework
 * XAML
+* MySQL Database
 * System.Media (SoundPlayer)
+* GitHub Actions (CI)
 * Visual Studio 2022
+* NuGet Package Manager
+
 
 
 # Project Structure
@@ -78,63 +147,116 @@ MainCyberSecurityChatBot/
 ├── MainWindow.xaml
 ├── MainWindow.xaml.cs
 ├── CybersecurityChatbot.cs
+├── QuizManager.cs
+├── QuizQuestion.cs
+├── CyberAwarenessQuizQuestions.cs
+├── ActivityLogger.cs
 ├── App.xaml
+├── App.xaml.cs
 ├── App.config
 │
 ├── audio/
 │   └── greeting.wav
 │
+├── .github/
+│   └── workflows/
+│       └── ci.yml
 │
-└── README.md
+├── README.md
+└── .gitignore                 
 ```
 
+# Database Setup
+
+## Create Database and Tables
+
+```sql
+CREATE DATABASE maincybersecuritychatbot;
+
+USE maincybersecuritychatbot;
+
+CREATE TABLE tasks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    reminder_date DATETIME,
+    status VARCHAR(50) DEFAULT 'Pending'
+);
+```
+## Update Connection String
+
+In **MainWindow.xaml.cs**, update the connection string:
+
+```csharp
+string connectionString =
+"server=localhost;database=maincybersecuritychatbot;uid=YOUR_USERNAME;pwd=YOUR_PASSWORD;";
+```
 
 # How to Run the Application
 
-1. Open the project in Visual Studio
-2. Build the solution
-3. Press `Ctrl + F5` to run the application
-4. Wait for the greeting audio and introduction message
-5. Enter your name in the chat
-6. Start chatting with the bot
-
+1. Open the project in Visual Studio 2022.
+2. Restore NuGet packages.
+3. Configure the MySQL connection string.
+4. Build the solution.
+5. Press **Ctrl + F5** to run the application.
+6. Wait for the greeting audio.
+7. Enter your name.
+8. Start chatting with the chatbot.
 
 # How to Use the Chatbot
 
-* Type your message in the textbox
-* Click the **SEND** button or press **Enter**
-* Ask cybersecurity-related questions
-* Request tips using:
-
-  * "Give me a tip"
-  * "Another tip"
-  * "Tell me more"
-  * "Explain more"
+* Type your message.
+* Click **SEND** or press **Enter**.
+* Ask cybersecurity-related questions.
+* Request cybersecurity tips.
+* Start the quiz.
+* Add and manage tasks.
+* View the Activity Log.
 
 
 # Example Questions
 
 Users can ask questions such as:
 
-* What is phishing?
-* Give me a phishing tip
+* Give me a tip
+* Another tip
 * Tell me more
+* Explain more
+* Start quiz
+* Play quiz
+* Add task Enable 2FA
+* Remind me to update Windows
+* Show activity log
+* Show log
+* Recent actions
+* What have you done for me?
+
+
+# Example Questions
+
+Users can ask:
+
+* What is phishing?
+* Give me a phishing tip.
+* Explain password safety.
+* Tell me more.
+* What is malware?
 * What is safe browsing?
-* Explain password safety
-* I'm interested in privacy
 * What can I ask?
-* Help
+* Help.
+* Start quiz.
+* Show activity log.
 
 
 # Memory and Recall Features
 
 The chatbot remembers:
 
-* The user’s name
+* User's name
 * User interests
 * Previous cybersecurity topics discussed
 
-This allows the chatbot to create more personalized responses during the conversation.
+This enables more personalized conversations.
 
 
 # Conversation Flow Features
@@ -158,9 +280,13 @@ The chatbot uses lists and dictionaries to randomly select cybersecurity tips an
 The chatbot includes:
 
 * Empty input validation
+* Invalid command handling
 * Missing audio file handling
-* Unknown input responses
+* Database connection handling
+* Quiz validation
 * Safe message handling
+* Exception handling throughout the application
+
 
 
 # Exit the Application
@@ -170,42 +296,67 @@ To close the chatbot, type:
 ```text
 goodbye
 ```
+or
+
+```text
+bye
+```
+
+or
+
+```text
+exit
+```
 
 The chatbot will display a goodbye message and close the application.
 
 
 # Changelog
 
-## 13/04/2026
+# Changelog
 
-Initial project setup:
+## Version 1.0 (13/04/2026)
 
 * Program structure created
 * Chatbot response system implemented
 * Audio greeting feature added
-* README file created
+* README created
 
-## 29/05/2026
+---
 
-Major GUI improvements:
+## Version 2.0 (29/05/2026)
 
 * Added WPF graphical interface
 * Added typing animation
-* Added memory and recall features
+* Added memory and recall
 * Added random response system
-* Added conversation flow support
-* Added sentiment detection
-* Added personalized chatbot interactions
+* Added Task Assistant
+* Added MySQL integration
+
+---
+
+## Version 3.0 (03/06/2026)
+
+* Added NLP simulation
+* Added Intent Detection
+* Added Cybersecurity Quiz
+* Added Activity Log
+* Added SQL Task Assistant
+* Added Reminder System
+* Improved conversation flow
+* Fixed bugs and improved performance
 
 ## Developer Notes
 
 This project was developed for educational purposes to demonstrate:
 
-* Object-oriented programming
+* Object-Oriented Programming
 * GUI development using WPF
 * Event-driven programming
-* User interaction design
-* Basic AI chatbot logic
+* SQL database integration
+* Natural Language Processing simulation
+* GitHub Actions (CI/CD)
+* Software engineering best practices
 * Cybersecurity awareness education
 
 

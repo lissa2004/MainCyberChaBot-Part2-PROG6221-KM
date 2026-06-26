@@ -68,7 +68,7 @@ namespace MainCyberSecurityChatBot{
             return "";
         }
 
-        // Main chatbot response method
+        // Main chatbot response method for Part 3 and Part 2 
         public static string GetResponse(string input)
         {
             {
@@ -77,11 +77,11 @@ namespace MainCyberSecurityChatBot{
 
                 input = input.ToLower();
 
-
                 string sentiment = DetectSentiment(input);
 
                 if (input.Contains("add task"))
                 {
+
                     lastTaskTitle = input.Replace("add task", "").Trim();
 
                     SaveTaskToDatabase(lastTaskTitle);
@@ -95,6 +95,7 @@ namespace MainCyberSecurityChatBot{
 
                 if (input.Contains("yes") && waitingForReminder)
                 {
+
                     waitingForReminder = false;
 
                     return "Got it! I'll remind you in 3 days.";
@@ -110,6 +111,7 @@ namespace MainCyberSecurityChatBot{
 
                 if (input.Contains("i'm interested in"))
                 {
+
                     userInterest = input.Replace("i'm interested in", "").Trim();
 
                     return $"Great! I'll remember that you're interested in {userInterest}. " +
