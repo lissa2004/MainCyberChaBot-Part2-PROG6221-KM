@@ -11,5 +11,14 @@ namespace MainCyberSecurityChatBot
         public string CorrectAnswer { get; set; }
 
         public string Explanation { get; set; }
+
+
+        public QuizQuestion(string question, List<string> options, string correctAnswer, string explanation)
+        {
+            Question = question;
+            Options = options;
+            CorrectAnswer = correctAnswer;
+            Explanation = explanation;
+        }
     }
 }
