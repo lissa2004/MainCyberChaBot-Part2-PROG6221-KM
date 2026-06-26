@@ -3,6 +3,7 @@ using MySql.Data.MySqlClient;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Windows;
 
 namespace MainCyberSecurityChatBot{
     // Main chatbot logic class
@@ -16,7 +17,7 @@ namespace MainCyberSecurityChatBot{
         private static string lastTaskTitle = "";
         private static string lastTopic = "";
 
-
+        
         //Dictionary storing cybersecurity tips
         private static Dictionary<string, List<string>> tips = new Dictionary<string, List<string>>(){
             {
@@ -68,116 +69,133 @@ namespace MainCyberSecurityChatBot{
         }
 
         // Main chatbot response method
-        public static string GetResponse(string input) {
-            if (string.IsNullOrWhiteSpace(input))
-                return "Please type something so I can help you.";
-
-            input = input.ToLower();
-
-            string sentiment = DetectSentiment(input);
-
-            if (input.Contains("add task"))
+        public static string GetResponse(string input)
+        {
             {
-                lastTaskTitle = input.Replace("add task", "").Trim();
+                if (string.IsNullOrWhiteSpace(input))
+                    return "Please type something so I can help you.";
 
-                SaveTaskToDatabase(lastTaskTitle);
-
-                waitingForReminder = true;
-
-                return $"Task added with the description '{lastTaskTitle}'. Would you like a reminder?";
-            }
+                input = input.ToLower();
 
 
+                string sentiment = DetectSentiment(input);
 
-            if (input.Contains("yes") && waitingForReminder)
-            {
-                waitingForReminder = false;
+                if (input.Contains("add task"))
+                {
+                    lastTaskTitle = input.Replace("add task", "").Trim();
 
-                return "Got it! I'll remind you in 3 days.";
-            }
+                    SaveTaskToDatabase(lastTaskTitle);
 
-            if (input.Contains("my name is")) {
-                userName = input.Replace("my name is", "").Trim();
+                    waitingForReminder = true;
 
-                return $"Nice to meet you, {userName}! How can I help you with cybersecurity today?";
-            }
-
-
-            if (input.Contains("i'm interested in")) {
-                userInterest = input.Replace("i'm interested in", "").Trim();
-
-                return $"Great! I'll remember that you're interested in {userInterest}. " +
-                       $"It's an important part of cybersecurity.";
-            }
-
-          
-            if (input.Contains("phishing")) {
-                lastTopic = "phishing";
-                return BuildResponse("Phishing is a cyberattack where scammers trick you into giving sensitive information.", sentiment);
-            }
-
-         
-            if (input.Contains("password")) {
-                lastTopic = "password";
-                return BuildResponse("Strong passwords protect your accounts from attackers.", sentiment);
-            }
-
-         
-            if (input.Contains("safe browsing")) {
-                lastTopic = "browsing";
-                return BuildResponse("Safe browsing helps protect you from malicious websites.", sentiment);
-            }
-
-         
-            if (input.Contains("hack")) {
-                lastTopic = "hacking";
-                return BuildResponse("Hacking involves exploiting system vulnerabilities.", sentiment);
-            }
-
-            // Follow-up conversation flow
-            if (input.Contains("tell me more") || input.Contains("explain more")) {
-
-            // Continue phishing conversation
-            if (lastTopic == "phishing") {
-
-                    return "Phishing scams often use fake emails, websites, and urgent messages to trick users into revealing passwords or banking information.";
-            }
-
-            // Continue password conversation
-            if (lastTopic == "password") {
-
-                    return "Weak passwords are easy for hackers to guess. Strong passwords reduce the risk of cyberattacks.";
-            }
-
-            // Continue browsing conversation
-            if (lastTopic == "browsing") {
-
-                    return "Unsafe browsing can expose users to malware, fake websites, and online scams.";
-            }
-
-                return "Please ask about the following cybersecurity Topics e.g. Phishing, password and browsing";
-            }
-
-            if (input.Contains("give me a tip") || input.Contains("tip") || input.Contains("another tip")) {
-                if (tips.ContainsKey(lastTopic))
-                    return GetRandom(tips[lastTopic]);
-
-                return "Tell me a topic first (like phishing or password safety) so I can give you a tip.";
-            }
-
-            // Personalised recall feature
-            if (input.Contains("advice") || input.Contains("recommend")) {
-
-                if (!string.IsNullOrEmpty(userInterest)) {
-
-                    return $"Since you're interested in {userInterest}, " +
-                           $"you should regularly review your account privacy and security settings, to allows be on the safe side";
+                    return $"Task added with the description '{lastTaskTitle}'. Would you like a reminder?";
                 }
-            }
 
-            // Help menu response
-            if (input.Contains("help") || input.Contains("what can i ask")) {
-                return @"You can ask me about:
+
+
+                if (input.Contains("yes") && waitingForReminder)
+                {
+                    waitingForReminder = false;
+
+                    return "Got it! I'll remind you in 3 days.";
+                }
+
+                if (input.Contains("my name is"))
+                {
+                    userName = input.Replace("my name is", "").Trim();
+
+                    return $"Nice to meet you, {userName}! How can I help you with cybersecurity today?";
+                }
+
+
+                if (input.Contains("i'm interested in"))
+                {
+                    userInterest = input.Replace("i'm interested in", "").Trim();
+
+                    return $"Great! I'll remember that you're interested in {userInterest}. " +
+                           $"It's an important part of cybersecurity.";
+                }
+
+
+                if (input.Contains("phishing"))
+                {
+                    lastTopic = "phishing";
+                    return BuildResponse("Phishing is a cyberattack where scammers trick you into giving sensitive information.", sentiment);
+                }
+
+
+                if (input.Contains("password"))
+                {
+                    lastTopic = "password";
+                    return BuildResponse("Strong passwords protect your accounts from attackers.", sentiment);
+                }
+
+
+                if (input.Contains("safe browsing"))
+                {
+                    lastTopic = "browsing";
+                    return BuildResponse("Safe browsing helps protect you from malicious websites.", sentiment);
+                }
+
+
+                if (input.Contains("hack"))
+                {
+                    lastTopic = "hacking";
+                    return BuildResponse("Hacking involves exploiting system vulnerabilities.", sentiment);
+                }
+
+                // Follow-up conversation flow
+                if (input.Contains("tell me more") || input.Contains("explain more"))
+                {
+
+                    // Continue phishing conversation
+                    if (lastTopic == "phishing")
+                    {
+
+                        return "Phishing scams often use fake emails, websites, and urgent messages to trick users into revealing passwords or banking information.";
+                    }
+
+                    // Continue password conversation
+                    if (lastTopic == "password")
+                    {
+
+                        return "Weak passwords are easy for hackers to guess. Strong passwords reduce the risk of cyberattacks.";
+                    }
+
+                    // Continue browsing conversation
+                    if (lastTopic == "browsing")
+                    {
+
+                        return "Unsafe browsing can expose users to malware, fake websites, and online scams.";
+                    }
+
+                    return "Please ask about the following cybersecurity Topics e.g. Phishing, password and browsing";
+                }
+
+                if (input.Contains("give me a tip") || input.Contains("tip") || input.Contains("another tip"))
+                {
+                    if (tips.ContainsKey(lastTopic))
+                        return GetRandom(tips[lastTopic]);
+
+                    return "Tell me a topic first (like phishing or password safety) so I can give you a tip.";
+                }
+
+                // Personalised recall feature
+                if (input.Contains("advice") || input.Contains("recommend"))
+                {
+
+                    if (!string.IsNullOrEmpty(userInterest))
+                    {
+
+                        return $"Since you're interested in {userInterest}, " +
+                               $"you should regularly review your account privacy and security settings, to allows be on the safe side";
+                    }
+                }
+
+                // Help menu response
+                if (input.Contains("help") || input.Contains("what can i ask"))
+                {
+                    return @"You can ask me about:
 
 - Phishing
 - Password safety
@@ -189,15 +207,15 @@ Then ask:
 - Another tip
 - Tell me more
 - Explain more";
+                }
+
+
+                // Default chatbot response
+                return "Please repeat the question again I don't think I understand, also try rephrasing or ask about cybersecurity topics like phishing or passwords?";
             }
-
-            // Default chatbot response
-            return "Please repeat the question again I don't think I understand, also try rephrasing or ask about cybersecurity topics like phishing or passwords?";
-
-      
-
         }
 
+        
         // Builds chatbot responses with emotion + tips
         private static string BuildResponse(string baseResponse, string sentiment) {
             string emotionalLayer = "";

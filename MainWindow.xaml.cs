@@ -31,6 +31,7 @@ namespace MainCyberSecurityChatBot {
             Loaded += MainWindow_Loaded;
 
             TestConnection();
+
         }
         private void TestConnection() {
             using (MySqlConnection conn = new MySqlConnection(connectionString)) {
@@ -92,6 +93,150 @@ namespace MainCyberSecurityChatBot {
             }
         }
 
+        private QuizManager quizManager = new QuizManager();
+
+        
+
+        private void StartQuizButton_Click(object sender, RoutedEventArgs e)
+        {
+            quizManager.StartQuiz();
+
+            StartQuizButton.Visibility = Visibility.Collapsed;
+
+            LoadCurrentQuestion();
+        }
+
+        private void AnswerButton_Click(object sender, RoutedEventArgs e)
+        {
+            Button clickedButton = (Button)sender;
+
+            // Get the first character (A, B, C or D)
+            string selectedAnswer = clickedButton.Content.ToString().Substring(0, 1);
+
+            bool correct = quizManager.SubmitAnswer(selectedAnswer);
+
+            if (correct)
+            {
+                FeedbackLabel.Text = "✅ Correct!\n\n" +
+                                     quizManager.GetExplanation();
+            }
+            else
+            {
+                FeedbackLabel.Text = "❌ Incorrect!\n\n" +
+                                     quizManager.GetExplanation();
+            }
+
+            ScoreLabel.Text =
+                $"Score: {quizManager.Score}/{quizManager.TotalQuestions}";
+
+            NextQuestionButton.Visibility = Visibility.Visible;
+
+            // Prevent answering twice
+            AnswerAButton.IsEnabled = false;
+            AnswerBButton.IsEnabled = false;
+            AnswerCButton.IsEnabled = false;
+            AnswerDButton.IsEnabled = false;
+        }
+
+        private void NextQuestionButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (quizManager.NextQuestion())
+            {
+                LoadCurrentQuestion();
+
+                AnswerAButton.IsEnabled = true;
+                AnswerBButton.IsEnabled = true;
+                AnswerCButton.IsEnabled = true;
+                AnswerDButton.IsEnabled = true;
+            }
+            else
+            {
+                FinishQuiz();
+            }
+        }
+
+        private void CloseQuizButton_Click(object sender, RoutedEventArgs e)
+        {
+            QuizPanel.Visibility = Visibility.Collapsed;
+
+            TaskAssistantPanel.Visibility = Visibility.Visible;
+
+            StartQuizButton.Visibility = Visibility.Visible;
+        }
+
+        private void LoadCurrentQuestion()
+        {
+            QuizQuestion question = quizManager.GetCurrentQuestion();
+
+            QuestionNumberLabel.Text =
+                $"Question {quizManager.CurrentQuestionNumber} of {quizManager.TotalQuestions}";
+
+            QuestionLabel.Text = question.Question;
+
+            AnswerAButton.Content = question.Options[0];
+
+            AnswerBButton.Content = question.Options[1];
+
+            if (question.Options.Count > 2)
+            {
+                AnswerCButton.Content = question.Options[2];
+                AnswerCButton.Visibility = Visibility.Visible;
+
+                AnswerDButton.Content = question.Options[3];
+                AnswerDButton.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                AnswerCButton.Visibility = Visibility.Collapsed;
+                AnswerDButton.Visibility = Visibility.Collapsed;
+            }
+
+            ScoreLabel.Text =
+                $"Score: {quizManager.Score}/{quizManager.TotalQuestions}";
+
+            FeedbackLabel.Text = "";
+
+            NextQuestionButton.Visibility = Visibility.Collapsed;
+
+            AnswerAButton.IsEnabled = true;
+            AnswerBButton.IsEnabled = true;
+            AnswerCButton.IsEnabled = true;
+            AnswerDButton.IsEnabled = true;
+
+            FeedbackLabel.Text = "";
+
+            NextQuestionButton.Visibility = Visibility.Collapsed;
+        }
+
+        private void FinishQuiz()
+        {
+            string message;
+
+            if (quizManager.Score >= 10)
+            {
+                message = "🏆 Great job! You're a cybersecurity pro!";
+            }
+            else if (quizManager.Score >= 7)
+            {
+                message = "👍 Good effort! Keep learning to stay safe online!";
+            }
+            else
+            {
+                message = "📚 Keep practicing your cybersecurity knowledge!";
+            }
+
+            MessageBox.Show(
+                $"Quiz Complete!\n\n" +
+                $"Final Score: {quizManager.Score}/{quizManager.TotalQuestions}\n\n" +
+                message,
+                "Quiz Results");
+
+            QuizPanel.Visibility = Visibility.Collapsed;
+
+            TaskAssistantPanel.Visibility = Visibility.Visible;
+
+            StartQuizButton.Visibility = Visibility.Visible;
+        }
         private void ViewTasksButton_Click(object sender, RoutedEventArgs e) {
             using (MySqlConnection conn = new MySqlConnection(connectionString)) {
                 try {
@@ -223,73 +368,83 @@ namespace MainCyberSecurityChatBot {
         private bool waitingForName = true;
         private string userName = "";
 
-        private void SendButton_Click(object sender, RoutedEventArgs e) {
+        private void SendButton_Click(object sender, RoutedEventArgs e)
+        {
+            string input = UserInput.Text.Trim();
 
-            // Get user message from textbox
-            string userMessage = UserInput.Text;
-
-            if (userMessage.ToLower().Contains("add task")) {
-                TaskAssistantPanel.Visibility = Visibility.Visible;
-
-                AddBotMessage(
-                    "Task assistant opened. " +
-                    "Please enter the task details."
-                );
-
-                return;
-            }
-
-            // Check if textbox empty
-            if (string.IsNullOrWhiteSpace(userMessage)) {
+            // check empty first
+            if (string.IsNullOrWhiteSpace(input))
+            {
                 AddBotMessage("Please type something.");
-
                 return;
             }
 
-            // Display user message bubble
-            AddUserMessage(userMessage);
+            string lowerInput = input.ToLower();
 
-            if (userMessage.ToLower().Contains("add task") ||
-            userMessage.ToLower().Contains("reminder")) {
-                AddBotMessage("Opening Task Assistant...");
+            AddUserMessage(input);
 
-                TaskAssistantPanel.Visibility = Visibility.Visible;
-            }
-
-
-            // Clear textbox after sending
-            UserInput.Clear();
-
-            if (waitingForName) {
-                userName = userMessage;
+            // NAME FLOW FIRST
+            if (waitingForName)
+            {
+                userName = input;
                 waitingForName = false;
 
-                // Display welcome message
                 TypeText(
                     $"Nice to meet you, {userName}!\n\n" +
                     "Ask me anything about online safety!\n\n" +
-                    "You can ask about:\n" +
                     "- Password safety\n" +
                     "- Phishing\n" +
                     "- Safe browsing\n" +
                     "- Hacking"
                 );
 
+                UserInput.Clear();
                 return;
             }
 
-
-            // Exit chatbot if user types goodbye
-            if (userMessage.ToLower() == "goodbye") {
+            // EXIT COMMAND
+            if (lowerInput == "goodbye")
+            {
                 TypeText("Stay safe online, GOODBYE!");
-            Close();
-
+                Close();
                 return;
             }
 
-        string response = CybersecurityChatbot.GetResponse(userMessage);
-        TypeText(response);
-    }
+            // QUIZ COMMAND
+            if (lowerInput == "start quiz" ||
+                lowerInput == "quiz" ||
+                lowerInput == "play quiz")
+            {
+                AddBotMessage("Starting the Cybersecurity Quiz...");
+
+                TaskAssistantPanel.Visibility = Visibility.Collapsed;
+                QuizPanel.Visibility = Visibility.Visible;
+
+                quizManager.StartQuiz();
+                StartQuizButton.Visibility = Visibility.Collapsed;
+
+                LoadCurrentQuestion();
+
+                UserInput.Clear();
+                return;
+            }
+
+            // TASK ASSISTANT
+            if (lowerInput.Contains("add task") || lowerInput.Contains("reminder"))
+            {
+                AddBotMessage("Opening Task Assistant...");
+                TaskAssistantPanel.Visibility = Visibility.Visible;
+
+                UserInput.Clear();
+                return;
+            }
+
+            // NORMAL CHATBOT RESPONSE
+            string response = CybersecurityChatbot.GetResponse(input);
+            TypeText(response);
+
+            UserInput.Clear();
+        }
 
         // Detect Enter key press/trigger event
         private void UserInput_KeyDown(object sender,System.Windows.Input.KeyEventArgs e) {
