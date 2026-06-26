@@ -1,4 +1,5 @@
 ﻿
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,7 +12,10 @@ namespace MainCyberSecurityChatBot{
         private static Random random = new Random();
         private static string userName = "";
         private static string userInterest = "";
+        private static bool waitingForReminder = false;
+        private static string lastTaskTitle = "";
         private static string lastTopic = "";
+
 
         //Dictionary storing cybersecurity tips
         private static Dictionary<string, List<string>> tips = new Dictionary<string, List<string>>(){
@@ -72,7 +76,26 @@ namespace MainCyberSecurityChatBot{
 
             string sentiment = DetectSentiment(input);
 
-       
+            if (input.Contains("add task"))
+            {
+                lastTaskTitle = input.Replace("add task", "").Trim();
+
+                SaveTaskToDatabase(lastTaskTitle);
+
+                waitingForReminder = true;
+
+                return $"Task added with the description '{lastTaskTitle}'. Would you like a reminder?";
+            }
+
+
+
+            if (input.Contains("yes") && waitingForReminder)
+            {
+                waitingForReminder = false;
+
+                return "Got it! I'll remind you in 3 days.";
+            }
+
             if (input.Contains("my name is")) {
                 userName = input.Replace("my name is", "").Trim();
 
@@ -170,6 +193,9 @@ Then ask:
 
             // Default chatbot response
             return "Please repeat the question again I don't think I understand, also try rephrasing or ask about cybersecurity topics like phishing or passwords?";
+
+      
+
         }
 
         // Builds chatbot responses with emotion + tips
@@ -194,6 +220,30 @@ Then ask:
             }
 
             return emotionalLayer + baseResponse + tip;
+        }
+
+        public static void SaveTaskToDatabase(string title)
+        {
+            string connectionString =
+                "server=localhost;database=maincybersecuritychatbot;uid=root;pwd=kamogelomathikge@2004;";
+
+            using (MySqlConnection conn = new MySqlConnection(connectionString))
+            {
+                conn.Open();
+
+                string query =
+                    "INSERT INTO tasks (title, description, reminder_date, status) " +
+                    "VALUES (@title, @desc, @date, @status)";
+
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+
+                cmd.Parameters.AddWithValue("@title", title);
+                cmd.Parameters.AddWithValue("@desc", "Added via chatbot");
+                cmd.Parameters.AddWithValue("@date", DateTime.Now.AddDays(3));
+                cmd.Parameters.AddWithValue("@status", "Pending");
+
+                cmd.ExecuteNonQuery();
+            }
         }
     }
 }

@@ -1,23 +1,171 @@
 ﻿using MainCyberSecurityChatBot;
+using MySql.Data.MySqlClient;
 using System;
+using System.Data;
 using System.Media;
+using System.Security.Cryptography;
+using System.Security.Policy;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
 
 namespace MainCyberSecurityChatBot {
+
     //Main chatbot window class
     public partial class MainWindow : Window {
+        string connectionString =
+         "server=localhost;database=maincybersecuritychatbot;uid=root;pwd=kamogelomathikge@2004;";
+
+
         public MainWindow() {
 
             InitializeComponent();
+
+            TaskAssistantPanel.Visibility = Visibility.Collapsed;
 
             SoundPlayer player = new SoundPlayer(@"audio\greeting.wav");
 
             player.Play();
 
             Loaded += MainWindow_Loaded;
+
+            TestConnection();
+        }
+        private void TestConnection() {
+            using (MySqlConnection conn = new MySqlConnection(connectionString)) {
+                try {
+                    conn.Open();
+                    MessageBox.Show("Database Connected!");
+                }
+                catch (Exception ex) {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+
+        private void AddTaskButton_Click(object sender, RoutedEventArgs e) {
+            using (MySqlConnection conn = new MySqlConnection(connectionString)) {
+                try {
+                    conn.Open();
+
+                    string query = @"INSERT INTO tasks 
+                            (title, description, reminder_date, status)
+                            VALUES 
+                            (@title, @desc, @date, @status)";
+
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+
+                    DateTime? reminderDate = null;
+
+                    if (ReminderDatePicker.SelectedDate.HasValue) {
+                        reminderDate = ReminderDatePicker.SelectedDate.Value;
+                    }
+
+                    if (ReminderCheckBox.IsChecked == true 
+                        && ReminderDatePicker.SelectedDate.HasValue) {
+                        AddBotMessage(
+                            $"Got it! I'll remind you on " +
+                            $"{ReminderDatePicker.SelectedDate.Value.ToShortDateString()}."
+                        );
+                    }
+
+                    cmd.Parameters.AddWithValue("@title", TaskTitleBox.Text);
+                    cmd.Parameters.AddWithValue("@desc", TaskDescriptionBox.Text);
+                    cmd.Parameters.AddWithValue("@date", reminderDate.HasValue ? reminderDate : (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@status", "Pending");
+
+                    cmd.ExecuteNonQuery();
+
+                    AddBotMessage(
+                    $"Task added with the description " +
+                    $"\"{TaskDescriptionBox.Text}\"."
+                    );
+
+                    TaskTitleBox.Clear();
+                    TaskDescriptionBox.Clear();
+                    ReminderDatePicker.SelectedDate = null;
+                }
+                catch (Exception ex) {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+
+        private void ViewTasksButton_Click(object sender, RoutedEventArgs e) {
+            using (MySqlConnection conn = new MySqlConnection(connectionString)) {
+                try {
+                    conn.Open();
+
+                    string query = "SELECT * FROM tasks";
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+
+                    MySqlDataReader reader = cmd.ExecuteReader();
+
+                    TaskListBox.Items.Clear();
+
+                    while (reader.Read()) {
+                        TaskListBox.Items.Add(
+                            $"{reader["id"]} | {reader["title"]} | {reader["status"]}"
+                        );
+                    }
+                }
+                catch (Exception ex) {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+
+        private void CompleteTaskButton_Click(object sender, RoutedEventArgs e) {
+            int id = GetSelectedTaskId();
+
+            if (id == -1) {
+                MessageBox.Show("Select a task first!");
+                return;
+            }
+
+            using (MySqlConnection conn = new MySqlConnection(connectionString)) {
+                conn.Open();
+
+                string query = "UPDATE tasks SET status='Completed' WHERE id=@id";
+
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@id", id);
+
+                cmd.ExecuteNonQuery();
+
+                MessageBox.Show("Task completed!");
+            }
+        }
+        private void DeleteTaskButton_Click(object sender, RoutedEventArgs e ) {
+            int id = GetSelectedTaskId();
+
+            if (id == -1) {
+                MessageBox.Show("Select a task first!");
+                return;
+            }
+
+            using (MySqlConnection conn = new MySqlConnection(connectionString)) {
+                conn.Open();
+
+                string query = "DELETE FROM tasks WHERE id=@id";
+
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@id", id);
+
+                cmd.ExecuteNonQuery();
+
+                MessageBox.Show("Task deleted!");
+            }
+        }
+
+        private int GetSelectedTaskId()
+        {
+            if (TaskListBox.SelectedItem == null)
+                return -1;
+
+            string item = TaskListBox.SelectedItem.ToString();
+            return int.Parse(item.Split('|')[0].Trim());
         }
 
         // Method that runs when application loads
@@ -75,15 +223,24 @@ namespace MainCyberSecurityChatBot {
         private bool waitingForName = true;
         private string userName = "";
 
-        private void SendButton_Click(object sender, RoutedEventArgs e)
-        {
+        private void SendButton_Click(object sender, RoutedEventArgs e) {
 
             // Get user message from textbox
             string userMessage = UserInput.Text;
 
+            if (userMessage.ToLower().Contains("add task")) {
+                TaskAssistantPanel.Visibility = Visibility.Visible;
+
+                AddBotMessage(
+                    "Task assistant opened. " +
+                    "Please enter the task details."
+                );
+
+                return;
+            }
+
             // Check if textbox empty
-            if (string.IsNullOrWhiteSpace(userMessage))
-            {
+            if (string.IsNullOrWhiteSpace(userMessage)) {
                 AddBotMessage("Please type something.");
 
                 return;
@@ -92,8 +249,16 @@ namespace MainCyberSecurityChatBot {
             // Display user message bubble
             AddUserMessage(userMessage);
 
-        // Clear textbox after sending
-        UserInput.Clear();
+            if (userMessage.ToLower().Contains("add task") ||
+            userMessage.ToLower().Contains("reminder")) {
+                AddBotMessage("Opening Task Assistant...");
+
+                TaskAssistantPanel.Visibility = Visibility.Visible;
+            }
+
+
+            // Clear textbox after sending
+            UserInput.Clear();
 
             if (waitingForName) {
                 userName = userMessage;
@@ -114,12 +279,12 @@ namespace MainCyberSecurityChatBot {
             }
 
 
-        // Exit chatbot if user types goodbye
+            // Exit chatbot if user types goodbye
             if (userMessage.ToLower() == "goodbye") {
                 TypeText("Stay safe online, GOODBYE!");
-        Close();
+            Close();
 
-            return;
+                return;
             }
 
         string response = CybersecurityChatbot.GetResponse(userMessage);
@@ -127,8 +292,8 @@ namespace MainCyberSecurityChatBot {
     }
 
         // Detect Enter key press/trigger event
-        private void UserInput_KeyDown(object sender,System.Windows.Input.KeyEventArgs e){
-            if (e.Key == System.Windows.Input.Key.Enter){
+        private void UserInput_KeyDown(object sender,System.Windows.Input.KeyEventArgs e) {
+            if (e.Key == System.Windows.Input.Key.Enter) {
 
                 SendButton_Click(sender, e);
             }
